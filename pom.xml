@@ -5,12 +5,28 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cz.jpmad</groupId>
-    <artifactId>RetryLibrary</artifactId>
+    <artifactId>retry-library</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>Retry Library</name>
     <description>Simple retry utility library for Java</description>
+    <url>https://github.com/petrsafrata/RetryLibrary</url>
+
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>petrsafrata</name>
+            <url>https://maven.pkg.github.com/petrsafrata/RetryLibrary</url>
+        </repository>
+    </distributionManagement>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
