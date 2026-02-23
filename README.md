@@ -1,7 +1,8 @@
 # Retry Library for Java 📖
 ![Java](https://img.shields.io/badge/Java-17%2B-green)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
-![GitHub Packages](https://img.shields.io/badge/GitHub_Packages-active-blue)
+![Open Source](https://img.shields.io/badge/Open%20Source-Yes-brightgreen)
+![GitHub Packages](https://img.shields.io/badge/GitHub_Packages-Active-brightgreen)
 ![Build](https://github.com/petrsafrata/RetryLibrary/actions/workflows/maven.yml/badge.svg)
 
 
@@ -16,6 +17,7 @@ The goal is to keep the API clean, fluent, and lightweight — without Spring, a
 - 🔁 Retry execution of failing operations
 - 🧩 Fluent, expressive API
 - ⚙️ Configurable attempts, delay, and retry conditions
+- ⏳ Pluggable `DelayStrategy` support (fixed delay, exponential backoff, custom implementations)
 - 📣 Listener callbacks (`onRetry`, `onSuccess`, `onFailure`)
 - 📦 No dependencies — works in any Java project
 - 🚀 Supports `Supplier<T>` and `Runnable` style operations
@@ -33,6 +35,7 @@ src/main/java/cz/jpmad/retry/
 ├── RetryExecutor.java      # Core retry loop engine
 ├── RetryException.java     # Exception thrown on final failure
 ├── RetryContext.java       # Immutable snapshot of retry attempt state
+├── DelayStrategy.java      # Strategy interface for computing delay between attempts
 │
 ├── functions/
 │ ├── CheckedSupplier.java  # Supplier supporting checked exceptions
@@ -63,7 +66,7 @@ To use it in your project, you need to add the GitHub Packages repository and th
     <dependency>
         <groupId>cz.jpmad</groupId>
         <artifactId>retry-library</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
     </dependency>
 </dependencies>
 ```
@@ -78,7 +81,7 @@ repositories {
 }
 
 dependencies {
-    implementation("cz.jpmad:retry-library:1.0.0")
+    implementation("cz.jpmad:retry-library:1.1.0")
 }
 ```
 
@@ -121,6 +124,18 @@ Retry
     .execute();
 ```
 
+You can provide your own delay strategy implementation:
+
+```java
+DelayStrategy exponential = attempt -> 100L * (1L << (attempt - 1));
+
+String result = Retry
+        .run(() -> callExternalService())
+        .setMaxAttempts(5)
+        .setDelayStrategy(exponential)
+        .execute();
+```
+
 ## 🔧 RetryContext Example
 
 The listener receives a RetryContext describing the current state:
@@ -161,9 +176,14 @@ mvn test
 ## 🤝 Contributing
 
 Contributions are welcome!
-Feel free to open issues or pull requests to improve the API, add strategies (exponential backoff, jitter), or expand documentation.
+Feel free to open issues or pull requests to improve the API, add strategies (exponential backoff, jitter), or expand documentation. 
+Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file for details.
 
 ## 📜 Licence
+
+This project is open-source and released under the Apache License 2.0.
+You are free to use, modify, distribute, and use it commercially under the terms of the Apache 2.0 license.
+See the [LICENSE](LICENSE) file for full details.
 ```
 Apache-2.0 – Copyright (c) 2025 Petr Šafrata
 ```
