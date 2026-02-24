@@ -1,0 +1,106 @@
+name: Java CI + Auto Release
+
+on:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+  release:
+    name: Tag + Release + Deploy (when VERSION changed)
+    runs-on: ubuntu-latest
+    needs: build
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if VERSION changed
+        id: verchanged
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -qx "VERSION"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Stop if VERSION not changed
+        if: steps.verchanged.outputs.changed != 'true'
+        run: echo "VERSION not changed, skipping release/deploy."
+
+      - name: Read version
+        if: steps.verchanged.outputs.changed == 'true'
+        id: version
+        run: |
+          VERSION=$(cat VERSION | tr -d ' \n\r\t')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Validate SemVer (X.Y.Z)
+        if: steps.verchanged.outputs.changed == 'true'
+        run: |
+          echo "${{ steps.version.outputs.version }}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
+
+      - name: Check if tag exists
+        if: steps.verchanged.outputs.changed == 'true'
+        id: tagcheck
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.verchanged.outputs.changed == 'true' && steps.tagcheck.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+
+      - name: Create GitHub Release
+        if: steps.verchanged.outputs.changed == 'true' && steps.tagcheck.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+
+      - name: Set up JDK 17 (GitHub Packages)
+        if: steps.verchanged.outputs.changed == 'true' && steps.tagcheck.outputs.exists == 'false'
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Deploy to GitHub Packages
+        if: steps.verchanged.outputs.changed == 'true' && steps.tagcheck.outputs.exists == 'false'
+        run: mvn -B deploy --file pom.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
