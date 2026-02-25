@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 ![Open Source](https://img.shields.io/badge/Open%20Source-Yes-brightgreen)
 ![GitHub Packages](https://img.shields.io/badge/GitHub_Packages-Active-brightgreen)
-![Build](https://github.com/petrsafrata/RetryLibrary/actions/workflows/maven.yml/badge.svg)
+![Build](https://github.com/petrsafrata/RetryLibrary/actions/workflows/maven-release.yml/badge.svg)
 
 
 A small, dependency-free Java library providing simple and readable retry logic for unstable or intermittent operations such as API calls, file access, database operations, remote service communication, OCR, AI model requests, and more.
